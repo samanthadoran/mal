@@ -26,7 +26,7 @@ mal_TEST_OPTS = --start-timeout 60 --test-timeout 120
 
 IMPLS = awk bash c d clojure coffee cpp crystal cs erlang elixir es6 \
 	factor forth fsharp go groovy guile haskell haxe java julia \
-	js kotlin lua make mal ocaml matlab miniMAL nim perl php ps \
+	js kotlin lua make mal ocaml matlab miniMAL nim nim-samanthadoran perl php ps \
 	python r racket rpython ruby rust scala swift tcl vb vimscript
 
 step0 = step0_repl
@@ -136,6 +136,7 @@ ocaml_STEP_TO_PROG =   ocaml/$($(1))
 matlab_STEP_TO_PROG =  matlab/$($(1)).m
 miniMAL_STEP_TO_PROG = miniMAL/$($(1)).json
 nim_STEP_TO_PROG =     nim/$($(1))
+nim-samanthadoran_STEP_TO_PROG = nim-samanthadoran/$($(1))
 perl_STEP_TO_PROG =    perl/$($(1)).pl
 php_STEP_TO_PROG =     php/$($(1)).php
 ps_STEP_TO_PROG =      ps/$($(1)).ps
@@ -194,6 +195,7 @@ ocaml_RUNSTEP =   ../$(2) $(3)
 matlab_RUNSTEP =  $(matlab_cmd) "$($(1))($(call matlab_args,$(3)));quit;"
 miniMAL_RUNSTEP = miniMAL ../$(2) $(3)
 nim_RUNSTEP =     ../$(2) $(3)
+nim-samanthadoran_RUNSTEP = ../$(2) $(3)
 perl_RUNSTEP =    perl ../$(2) $(3)
 php_RUNSTEP =     php ../$(2) $(3)
 ps_RUNSTEP =      gs -q -I./ -dNODISPLAY -- ../$(2) $(3)
