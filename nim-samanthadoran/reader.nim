@@ -52,34 +52,39 @@ proc read_atom(reader: Reader): malData =
     #Keep track of things...
     next(reader)
 
-    #Account for special symbols
-    case val
-    of "'":
-      var list: seq[malData] = @[]
-      list.add(malData(malType: malSymbol, kind: malSymbol, sym: "quote"))
-      list.add(read_form(reader))
-      result = malData(malType: malList, kind: malList, list: list)
-
-    of "`":
-      var list: seq[malData] = @[]
-      list.add(malData(malType: malSymbol, kind: malSymbol, sym: "quasiquote"))
-      list.add(read_form(reader))
-      result = malData(malType: malList, kind: malList, list: list)
-
-    of "~":
-      var list: seq[malData] = @[]
-      list.add(malData(malType: malSymbol, kind: malSymbol, sym: "unquote"))
-      list.add(read_form(reader))
-      result = malData(malType: malList, kind: malList, list: list)
-
-    of "~@":
-      var list: seq[malData] = @[]
-      list.add(malData(malType: malSymbol, kind: malSymbol, sym: "splice-unquote"))
-      list.add(read_form(reader))
-      result = malData(malType: malList, kind: malList, list: list)
-
+    if val == "nil":
+      result = malData(malType: malNil, kind: malNil)
+    elif val.toLower() == "true" or val.toLower() == "false":
+      result = malData(malType: malBool, kind: malBool, boolean: parseBool(val.toLower()))
     else:
-      result = malData(malType: malSymbol, kind: malSymbol, sym: val)
+      #Account for special symbols
+      case val
+      of "'":
+        var list: seq[malData] = @[]
+        list.add(malData(malType: malSymbol, kind: malSymbol, sym: "quote"))
+        list.add(read_form(reader))
+        result = malData(malType: malList, kind: malList, list: list)
+
+      of "`":
+        var list: seq[malData] = @[]
+        list.add(malData(malType: malSymbol, kind: malSymbol, sym: "quasiquote"))
+        list.add(read_form(reader))
+        result = malData(malType: malList, kind: malList, list: list)
+
+      of "~":
+        var list: seq[malData] = @[]
+        list.add(malData(malType: malSymbol, kind: malSymbol, sym: "unquote"))
+        list.add(read_form(reader))
+        result = malData(malType: malList, kind: malList, list: list)
+
+      of "~@":
+        var list: seq[malData] = @[]
+        list.add(malData(malType: malSymbol, kind: malSymbol, sym: "splice-unquote"))
+        list.add(read_form(reader))
+        result = malData(malType: malList, kind: malList, list: list)
+
+      else:
+        result = malData(malType: malSymbol, kind: malSymbol, sym: val)
 
 
 proc read_list(reader: Reader): seq[malData] =
@@ -94,6 +99,10 @@ proc read_list(reader: Reader): seq[malData] =
       result.add(toAdd)
     else:
       break
+
+  if reader.position < len(reader.tokens):
+    if peek(reader) == ")":
+      next(reader)
 
 proc tokenizer(input: string): seq[string] =
   result = input.findAll(nre.re(malMatch))
