@@ -10,32 +10,14 @@ proc rep(input: string, env: Env): string
 proc READ(input: string): malData =
   result = read_str(input)
 
-
-discard """
 proc eval_ast(ast: malData, env: Env): malData =
   case ast.malType
-  #Deviates from mal guide, but we'll have to make due
   of malSymbol:
     if env.find(ast.sym) != nil:
-      let val = env.getvar(ast.sym)(@[])
-      if val.malType == malNil:
-        result = ast
-      else:
-        result = val
+      result = env.getvar(ast.sym)
     else:
+      #echo("This happens, couldn't find: ", ast.sym)
       result = ast
-  of malList:
-    var mList = malData(malType: malList, kind: malList, list: @[])
-    for i in ast.list:
-      mList.list.add(EVAL(i, env))
-    result = mList
-  else:
-    result = ast
-"""
-proc eval_ast(ast: malData, env: Env): malData =
-  case ast.malType
-  of malSymbol:
-    result = env.getvar(ast.sym)
   of malList:
     result = malData(malType: malList, kind: malList, list: @[])
     for i in ast.list:
@@ -52,8 +34,10 @@ proc EVAL(ast: malData, env: ENV): malData =
     if ast.list[0].malType == malSymbol:
       case ast.list[0].sym
       of "def!":
-        let evaluatedList = eval_ast(ast, env)
-        env.setvar(ast.list[1].sym, evaluatedList.list[2])
+        #Take special care to not lookup the bad symbols
+        let listToEval = malData(malType: malList, kind: malList, list: ast.list[2..<len(ast.list)])
+        let evaluatedList = eval_ast(listToEval, env)
+        env.setvar(ast.list[1].sym, evaluatedList.list[0])
         result = env.getvar(ast.list[1].sym)
       of "let*":
         var innerEnv = initEnv(outer = env)
@@ -63,23 +47,15 @@ proc EVAL(ast: malData, env: ENV): malData =
           innerEnv.setVar(binds.list[i].sym, bindEval)
         result = EVAL(ast.list[2], innerEnv)
       of "if":
-        let evaluatedList = eval_ast(ast, env)
-        let conditional = evaluatedList.list[1]
-
         var branch: bool = false
-
-        #Automatically false
-        if conditional.malType == malNil:
+        let innerEval = EVAL(ast.list[1], env)
+        if innerEval.malType == malNil:
           branch = false
-        #Check the value..
-        elif conditional.malType == malBool:
-          if conditional.boolean:
-            branch = true
-          else:
-            branch = false
-        #Anything else is 'true'
+        elif innerEval.malType == malBool:
+          branch = innerEval.boolean
         else:
           branch = true
+
 
         if branch:
           result = EVAL(ast.list[2], env)
@@ -156,6 +132,23 @@ proc makeInitialEnv(): Env =
         acc = acc div nodes[i].num
       result = malData(malType: malNumber, kind: malNumber, num: acc)
   result.setvar("/", malProc)
+  malProc = malData(malType: malFunc, kind: malFunc, p: nil)
+  #TODO: Do this proper
+  malProc.p = proc(nodes: varargs[malData]): malData =
+    if len(nodes) == 0:
+      result = malData(malType: malNil, kind: malNil)
+    else:
+      var b: bool
+      if nodes[0].malType == nodes[1].malType:
+        if nodes[0].num == nodes[1].num:
+          #result = malData(malType: malBool, kind: malBool, boolean: true)
+          b = true
+        else:
+          b = false
+      else:
+        b = false
+      result = malData(malType: malBool, kind: malBool, boolean: b)
+  result.setvar("=", malProc)
 
 proc main() =
   #Keep our initial environment
