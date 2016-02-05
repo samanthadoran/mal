@@ -12,6 +12,8 @@ proc pr_str*(input: malData): string =
     result = $input.boolean
   of malSymbol:
     result = input.sym
+  of malFunc:
+    result = "#FUNCTION"
   of malList:
     var sSeq: seq[string] = @[]
     for i in 0..<len(input.list):

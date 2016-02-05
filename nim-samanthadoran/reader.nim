@@ -32,7 +32,7 @@ proc read_form(reader: Reader): malData =
 
   case peek(reader)
   #It's a list...
-  of "(":
+  of "(", "[":
     #Get off of the opening parentheses here for sanity
     next(reader)
 
@@ -92,7 +92,7 @@ proc read_list(reader: Reader): seq[malData] =
   result = newSeq[malData]()
 
   #While we haven't closed this list...
-  while peek(reader) != ")" and reader.position < len(reader.tokens):
+  while peek(reader) != ")" and peek(reader) != "]" and reader.position < len(reader.tokens):
     #Read the form as appropriate
     var toAdd = read_form(reader)
     if toAdd != nil:
@@ -101,7 +101,7 @@ proc read_list(reader: Reader): seq[malData] =
       break
 
   if reader.position < len(reader.tokens):
-    if peek(reader) == ")":
+    if peek(reader) == ")" or peek(reader) == "]":
       next(reader)
 
 proc tokenizer(input: string): seq[string] =

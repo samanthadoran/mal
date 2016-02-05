@@ -34,7 +34,9 @@ proc EVAL(ast: malData, env: Env): malData =
   case ast.malType
   of malList:
     #Get the first key, avoid evaluating the list until we are sure the
-    #environment won't be changing
+    #environment won't be changing.
+    #TODO: Consider a method of not having to write the calculation of that
+    #value three times. Preferably without causing a crash due to change in env.
     let firstKey = ast.list[0]
 
     #It's a symbol, we have to do some operations
@@ -91,10 +93,6 @@ proc makeInitialEnv(): Env =
     else:
       var acc: int = nodes[0].num
       for i in 1..<len(nodes):
-        if nodes[i].malType != malNumber:
-          echo("It's not a number, sym val is: ", nodes[i].sym)
-        #else:
-        #  echo("It is a number, value is: ", nodes[i].num)
         acc += nodes[i].num
       result = malData(malType: malNumber, kind: malNumber, num: acc)
   )
