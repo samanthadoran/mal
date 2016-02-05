@@ -27,28 +27,25 @@ proc peek(reader: Reader): string =
 proc read_form(reader: Reader): malData =
   #Function to call the appropriate reader
   if reader.position >= len(reader.tokens):
-    result = nil
-    return result
-
-  case peek(reader)
-  #It's a list...
-  of "(", "[":
-    #Get off of the opening parentheses here for sanity
-    next(reader)
-
-    result = malData(malType: malList, kind: malList, list: read_list(reader))
-  #It's anything but a list...
+    result = malData(malType: malNil, kind: malNil)
   else:
-    result = read_atom(reader)
+    case peek(reader)
+    #It's a list...
+    of "(", "[":
+      #Get off of the opening parentheses here for sanity
+      next(reader)
+
+      result = malData(malType: malList, kind: malList, list: read_list(reader))
+    #It's anything but a list...
+    else:
+      result = read_atom(reader)
 
 proc read_atom(reader: Reader): malData =
+  let val = peek(reader)
   try:
-    let val: int = parseInt(peek(reader))
-    result = malData(malType: malNumber, kind: malNumber, num: val)
+    result = malData(malType: malNumber, kind: malNumber, num: parseInt(val))
     next(reader)
   except ValueError:
-    let val = peek(reader)
-
     #Keep track of things...
     next(reader)
 

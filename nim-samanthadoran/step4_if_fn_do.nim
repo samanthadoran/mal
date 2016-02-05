@@ -1,4 +1,4 @@
-import reader, printer, nre, types, tables, future, env
+import reader, printer, nre, types, tables, future, env, core
 
 proc READ(input: string): malData
 proc eval_ast(ast: malData, env: Env): malData
@@ -48,19 +48,21 @@ proc EVAL(ast: malData, env: ENV): malData =
         result = EVAL(ast.list[2], innerEnv)
       of "if":
         var branch: bool = false
-        let innerEval = EVAL(ast.list[1], env)
-        if innerEval.malType == malNil:
+
+        #Don't forget to evaluate the conditional
+        let conditional = EVAL(ast.list[1], env)
+
+        if conditional.malType == malNil:
           branch = false
-        elif innerEval.malType == malBool:
-          branch = innerEval.boolean
+        elif conditional.malType == malBool:
+          branch = conditional.boolean
         else:
           branch = true
-
 
         if branch:
           result = EVAL(ast.list[2], env)
         else:
-          if len(ast.list) > 2:
+          if len(ast.list) > 3:
             result = EVAL(ast.list[3], env)
           else:
             result = malData(malType: malNil, kind: malNil)
@@ -90,73 +92,23 @@ proc rep(input: string, env: Env): string =
   result = PRINT(EVAL(READ(input), env))
 
 proc makeInitialEnv(): Env =
-  #Gross and messy function to make our initial environment
+  #Setup our initial environment
   result = initEnv(nil)
-  var malProc = malData(malType: malFunc, kind: malFunc, p: nil)
-  malProc.p = proc(nodes: varargs[malData]): malData =
-    if len(nodes) == 0:
-      result = malData(malType: malNil, kind: malNil)
-    else:
-      var acc: int = nodes[0].num
-      for i in 1..<len(nodes):
-        acc += nodes[i].num
-      result = malData(malType: malNumber, kind: malNumber, num: acc)
-  result.setvar("+", malProc)
-  malProc = malData(malType: malFunc, kind: malFunc, p: nil)
-  malProc.p = proc(nodes: varargs[malData]): malData =
-    if len(nodes) == 0:
-      result = malData(malType: malNil, kind: malNil)
-    else:
-      var acc: int = nodes[0].num
-      for i in 1..<len(nodes):
-        acc -= nodes[i].num
-      result = malData(malType: malNumber, kind: malNumber, num: acc)
-  result.setvar("-", malProc)
-  malProc = malData(malType: malFunc, kind: malFunc, p: nil)
-  malProc.p = proc(nodes: varargs[malData]): malData =
-    if len(nodes) == 0:
-      result = malData(malType: malNil, kind: malNil)
-    else:
-      var acc: int = nodes[0].num
-      for i in 1..<len(nodes):
-        acc *= nodes[i].num
-      result = malData(malType: malNumber, kind: malNumber, num: acc)
-  result.setvar("*", malProc)
-  malProc = malData(malType: malFunc, kind: malFunc, p: nil)
-  malProc.p = proc(nodes: varargs[malData]): malData =
-    if len(nodes) == 0:
-      result = malData(malType: malNil, kind: malNil)
-    else:
-      var acc: int = nodes[0].num
-      for i in 1..<len(nodes):
-        acc = acc div nodes[i].num
-      result = malData(malType: malNumber, kind: malNumber, num: acc)
-  result.setvar("/", malProc)
-  malProc = malData(malType: malFunc, kind: malFunc, p: nil)
-  #TODO: Do this proper
-  malProc.p = proc(nodes: varargs[malData]): malData =
-    if len(nodes) == 0:
-      result = malData(malType: malNil, kind: malNil)
-    else:
-      var b: bool
-      if nodes[0].malType == nodes[1].malType:
-        if nodes[0].num == nodes[1].num:
-          #result = malData(malType: malBool, kind: malBool, boolean: true)
-          b = true
-        else:
-          b = false
-      else:
-        b = false
-      result = malData(malType: malBool, kind: malBool, boolean: b)
-  result.setvar("=", malProc)
+  for k,v in ns.pairs():
+    result.setvar(k, v)
 
 proc main() =
   #Keep our initial environment
   var env = makeInitialEnv()
+
+  #Define not using the language itself
+  discard rep("(def! not (fn* (a) (if a false true)))", env)
+
   while true:
     stdout.write "user> "
     let input = readline(stdin)
     let output = rep(input, env)
     if output != nil:
       echo(output)
+
 main()
