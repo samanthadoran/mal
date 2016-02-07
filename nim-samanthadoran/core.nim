@@ -1,4 +1,4 @@
-import tables, types, future
+import tables, types, future, printer, strutils
 
 var ns*: Table[string, malData] = initTable[string, malData]()
 
@@ -148,4 +148,37 @@ ns["count"] = malData(malType: malFunc, kind: malFunc, p: proc(nodes: varargs[ma
     result = malData(malType: malNil, kind: malNil)
   else:
     result = malData(malType: malNumber, kind: malNumber, num: len(nodes[0].list))
+)
+
+ns["pr-str"] = malData(malType: malFunc, kind: malFunc, p: proc(nodes: varargs[malData]): malData =
+  if nodes.len() == 0:
+    result = malData(malType: malString, kind: malString, str: pr_str(nil, false))
+  else:
+    var strings: seq[string] = @[]
+    for i in nodes:
+      strings.add(pr_str(i, true))
+    result = malData(malType: malString, kind: malString, str: strings.join(" "))
+)
+ns["str"] = malData(malType: malFunc, kind: malFunc, p: proc(nodes: varargs[malData]): malData =
+  if nodes.len() == 0:
+    result = malData(malType: malString, kind: malString, str: pr_str(nil, false))
+  else:
+    var strings: seq[string] = @[]
+    for i in nodes:
+      strings.add(pr_str(i, false))
+    result = malData(malType: malString, kind: malString, str: strings.join(""))
+)
+ns["prn"] = malData(malType: malFunc, kind: malFunc, p: proc(nodes: varargs[malData]): malData =
+  var strings: seq[string] = @[]
+  for i in nodes:
+    strings.add(pr_str(i, true))
+  echo(strings.join(" "))
+  result = malData(malType: malNil, kind: malNil)
+)
+ns["println"] = malData(malType: malFunc, kind: malFunc, p: proc(nodes: varargs[malData]): malData =
+  var strings: seq[string] = @[]
+  for i in nodes:
+    strings.add(pr_str(i, false))
+  echo(strings.join(" "))
+  result = malData(malType: malNil, kind: malNil)
 )

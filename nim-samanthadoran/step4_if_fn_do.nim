@@ -16,7 +16,6 @@ proc eval_ast(ast: malData, env: Env): malData =
     if env.find(ast.sym) != nil:
       result = env.getvar(ast.sym)
     else:
-      #echo("This happens, couldn't find: ", ast.sym)
       result = ast
   of malList:
     result = malData(malType: malList, kind: malList, list: @[])
@@ -86,7 +85,7 @@ proc EVAL(ast: malData, env: ENV): malData =
       result = firstElement.p(evaluatedList.list[1..<len(evaluatedList.list)])
 
 proc PRINT(ast: malData): string =
-  result = pr_str(ast)
+  result = pr_str(ast, true)
 
 proc rep(input: string, env: Env): string =
   result = PRINT(EVAL(READ(input), env))
