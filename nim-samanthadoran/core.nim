@@ -144,8 +144,13 @@ ns["empty?"] = malData(malType: malFunc, kind: malFunc, p: proc(nodes: varargs[m
     result = malData(malType: malBool, kind: malBool, boolean: len(nodes[0].list) == 0)
 )
 ns["count"] = malData(malType: malFunc, kind: malFunc, p: proc(nodes: varargs[malData]): malData =
-  if nodes.len() == 0 or nodes[0].malType != malList:
-    result = malData(malType: malNil, kind: malNil)
+  #There is no parameter, return the function without attempting to evaluate i
+  if nodes.len() == 0:
+    result = malData(malType: malNumber, kind: malNumber, num: 0)
+  elif nodes[0].malType == malNil:
+    result = malData(malType: malNumber, kind: malNumber, num: 0)
+  elif nodes[0].malType != malList:
+    result = malData(malType: malNumber, kind: malNumber, num: 1)
   else:
     result = malData(malType: malNumber, kind: malNumber, num: len(nodes[0].list))
 )
